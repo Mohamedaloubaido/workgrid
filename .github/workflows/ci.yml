@@ -9,21 +9,6 @@ jobs:
   quality:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: workgrid_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     env:
       NODE_ENV: test
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/workgrid_test?schema=public
@@ -39,7 +24,6 @@ jobs:
 
       - run: npm install
       - run: npx prisma generate
-      - run: npx prisma db push
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
