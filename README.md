@@ -2,6 +2,13 @@
 
 Workgrid is a portfolio-grade project management SaaS built to demonstrate production-minded full-stack engineering: authentication, multi-tenant PostgreSQL data modeling, workspace RBAC, an auditable task workflow, a React Kanban dashboard, Docker and automated quality gates.
 
+## Demo and source status
+
+Frontend deployment: https://workgrid-web.vercel.app  
+Portfolio case study: https://mohammed-portfolio-git-redesign-fullstack-portfolio-dev-talent.vercel.app/work/workgrid
+
+> The React dashboard is deployed publicly. The Fastify API and PostgreSQL database are implemented in this repository and are currently intended to run locally with Docker rather than as a public production service.
+
 ## What this project demonstrates
 
 Workgrid is intentionally **not** a basic todo app. It models real SaaS concerns:
@@ -42,6 +49,7 @@ Workgrid is intentionally **not** a basic todo app. It models real SaaS concerns
 
 - Docker / Docker Compose
 - GitHub Actions
+- Vercel (dashboard)
 
 ## Architecture
 
@@ -183,7 +191,7 @@ npm run build:web
 - Production database deployment
 - Runtime observability
 
-## Portfolio talking points
+## What this proves
 
 Workgrid demonstrates:
 
