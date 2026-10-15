@@ -17,14 +17,23 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - run: npm install
-      - run: npx prisma generate
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run build
+      - name: Install API dependencies
+        run: npm install
+      - name: Install web dependencies
+        run: npm --prefix web install
+      - name: Generate Prisma client
+        run: npx prisma generate
+      - name: Lint API
+        run: npm run lint
+      - name: Typecheck API
+        run: npm run typecheck
+      - name: Test API
+        run: npm test
+      - name: Build API
+        run: npm run build
+      - name: Build web dashboard
+        run: npm run build:web

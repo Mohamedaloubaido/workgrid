@@ -55,4 +55,17 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       token
     };
   });
+
+  app.get("/auth/me", {
+    preHandler: [app.authenticate],
+    schema: { tags: ["Auth"], summary: "Get current user" }
+  }, async (request) => {
+    const user = await prisma.user.findUnique({
+      where: { id: request.user.sub },
+      select: { id: true, name: true, email: true, createdAt: true }
+    });
+
+    if (!user) throw new AppError(404, "User not found", "USER_NOT_FOUND");
+    return user;
+  });
 };

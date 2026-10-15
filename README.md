@@ -1,20 +1,24 @@
 # Workgrid
 
-A portfolio-grade project management SaaS backend built to demonstrate production-minded full-stack engineering: authentication, PostgreSQL data modeling, role-based authorization, validation, audit logging, API documentation, tests, Docker and CI.
+Workgrid is a portfolio-grade project management SaaS built to demonstrate production-minded full-stack engineering: authentication, multi-tenant PostgreSQL data modeling, workspace RBAC, an auditable task workflow, a React Kanban dashboard, Docker and automated quality gates.
 
-## Why this project exists
+## What this project demonstrates
 
-Workgrid is intentionally **not** a basic todo app. It models real multi-tenant product concerns:
+Workgrid is intentionally **not** a basic todo app. It models real SaaS concerns:
 
+- Users authenticate with expiring JWT access tokens.
 - Users belong to workspaces with `OWNER`, `ADMIN` or `MEMBER` roles.
-- Projects are isolated inside a workspace.
-- Tasks belong to projects and can be assigned only to workspace members.
-- Permission checks happen server-side.
-- Important mutations create audit-log entries.
-- Validation and error responses are explicit.
-- CI verifies linting, types, tests and builds.
+- Projects and tasks are scoped through workspace ownership.
+- Authorization is enforced server-side, separately from authentication.
+- Task mutations produce workspace-scoped audit records.
+- The dashboard consumes the real API and supports drag-and-drop task state changes.
+- Request payloads and environment configuration are validated.
+- Docker provides repeatable local infrastructure.
+- CI is defined for linting, types, tests and production builds.
 
 ## Stack
+
+### API
 
 - Node.js 22
 - Fastify 5
@@ -25,30 +29,41 @@ Workgrid is intentionally **not** a basic todo app. It models real multi-tenant 
 - Zod validation
 - Swagger / OpenAPI
 - Vitest
-- Docker
+
+### Dashboard
+
+- React 19
+- TypeScript
+- Vite
+- CSS design system
+- Native HTML drag and drop
+
+### Delivery
+
+- Docker / Docker Compose
 - GitHub Actions
 
 ## Architecture
 
 ```text
-Client
-  │
-  ▼
+React dashboard
+      │
+      ▼
 Fastify HTTP API
-  │
-  ├── Authentication (JWT)
-  ├── Validation (Zod)
-  ├── Authorization (workspace RBAC)
-  ├── Domain routes
-  │     ├── Workspaces
-  │     ├── Projects
-  │     └── Tasks
-  ├── Audit service
-  │
-  ▼
+      │
+      ├── JWT authentication
+      ├── Zod validation
+      ├── Workspace RBAC
+      ├── Domain routes
+      │     ├── Workspaces
+      │     ├── Projects
+      │     └── Tasks
+      ├── Audit service
+      │
+      ▼
 Prisma ORM
-  │
-  ▼
+      │
+      ▼
 PostgreSQL
 ```
 
@@ -63,6 +78,21 @@ User
 User + Workspace ── AuditLog
 ```
 
+`WorkspaceMember` is the tenant authorization boundary. A user can have a different role in each workspace.
+
+## Dashboard features
+
+- Sign in / registration
+- Workspace switcher
+- Workspace creation
+- Project navigation and creation
+- Project metrics
+- Four-stage Kanban board
+- Task creation with priority
+- Drag-and-drop task status updates
+- Recent workspace audit trail
+- Responsive desktop/mobile UI
+
 ## API
 
 | Method | Endpoint | Purpose |
@@ -70,17 +100,22 @@ User + Workspace ── AuditLog
 | GET | `/health` | Health check |
 | POST | `/auth/register` | Register |
 | POST | `/auth/login` | Login |
+| GET | `/auth/me` | Current authenticated user |
 | GET | `/workspaces` | List user's workspaces |
 | POST | `/workspaces` | Create workspace |
+| GET | `/workspaces/:workspaceId/members` | List workspace members |
+| GET | `/workspaces/:workspaceId/activity` | Recent audit activity |
 | GET | `/workspaces/:workspaceId/projects` | List projects |
 | POST | `/workspaces/:workspaceId/projects` | Create project |
 | GET | `/projects/:projectId/tasks` | List tasks |
 | POST | `/projects/:projectId/tasks` | Create task |
 | PATCH | `/tasks/:taskId` | Update task |
 
-Swagger UI is available at `/docs`.
+Swagger UI is available at `/docs` when the API is running.
 
 ## Local setup
+
+### 1. API and database
 
 ```bash
 cp .env.example .env
@@ -89,11 +124,21 @@ npm install
 npm run db:generate
 npm run db:migrate
 npm run db:seed
-npm run dev
+npm run dev:api
 ```
 
 API: `http://localhost:4000`  
 Docs: `http://localhost:4000/docs`
+
+### 2. Dashboard
+
+```bash
+cp web/.env.example web/.env
+npm --prefix web install
+npm run dev:web
+```
+
+Dashboard: `http://localhost:3000`
 
 Demo seed credentials:
 
@@ -102,31 +147,28 @@ demo@workgrid.dev
 DemoPass123!
 ```
 
-> The demo credential is only for local seeded development data. Do not use it in production.
+> Demo credentials exist only for local seeded development data. Do not use them in production.
 
 ## Security choices
 
 - Passwords are hashed with bcrypt.
-- JWTs expire after one hour.
-- Workspace membership and minimum role are checked server-side.
+- JWT access tokens expire after one hour.
+- Workspace role checks run server-side before protected operations.
 - Task assignees must belong to the same workspace.
 - The API is rate limited.
-- Request bodies are validated.
-- Unique database constraints protect workspace slugs and project keys.
-- Mutating domain operations produce audit records.
+- Request bodies are validated with Zod.
+- Database uniqueness constraints protect workspace slugs and project keys.
+- Important mutations create audit records tied to actor + workspace.
+- CORS origins are environment-controlled.
 
-## CI
+## Quality commands
 
-Every push and pull request runs:
-
-```text
-install
-→ Prisma generate
-→ database schema setup
-→ lint
-→ typecheck
-→ tests
-→ build
+```bash
+npm run lint
+npm run typecheck
+npm test
+npm run build
+npm run build:web
 ```
 
 ## Roadmap
@@ -136,22 +178,23 @@ install
 - Task comments
 - Pagination and filtering
 - Optimistic concurrency/version fields
-- Integration tests against PostgreSQL
-- React/Next.js dashboard
-- Deployment and observability
+- PostgreSQL integration tests
+- Assignee controls in the dashboard
+- Production database deployment
+- Runtime observability
 
 ## Portfolio talking points
 
-This project demonstrates:
+Workgrid demonstrates:
 
-1. Multi-tenant relational data modeling.
+1. Multi-tenant relational modeling.
 2. Authentication vs. authorization separation.
-3. RBAC with explicit server-side checks.
-4. Transaction-safe product boundaries.
-5. Validation and predictable errors.
-6. Auditability.
-7. Automated quality gates.
-8. Containerized local infrastructure.
+3. Server-side workspace RBAC.
+4. API and frontend integration.
+5. Auditability and explicit state transitions.
+6. Validation and predictable error responses.
+7. Containerized local infrastructure.
+8. Automated quality-gate design.
 
 ---
 
